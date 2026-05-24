@@ -412,7 +412,7 @@ function FemaleJobsTab() {
   function startEdit(j: FJob) {
     setEditId(j._id);
     setEditJob(j.job ?? "");
-    setEditRisks(j.common_risks?? []);
+    setEditRisks(j.common_risks ?? []);
     setEditNuts(j.nutrient_risks ?? []);
   }
 
@@ -445,14 +445,8 @@ function FemaleJobsTab() {
   const filtered = jobs.filter(
     (j) =>
       j.job?.toLowerCase().includes(search.toLowerCase()) ||
-      j.common_risks
-        ?.join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-      j.nutrient_risks
-        ?.join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+      j.common_risks?.join(" ").toLowerCase().includes(search.toLowerCase()) ||
+      j.nutrient_risks?.join(" ").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -599,20 +593,16 @@ function FemaleJobsTab() {
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap gap-1">
-                          {(job.common_risks ?? []).map(
-                            (r: string) => (
-                              <Pill key={r} label={r} color={RUST} />
-                            ),
-                          )}
+                          {(job.common_risks ?? []).map((r: string) => (
+                            <Pill key={r} label={r} color={RUST} />
+                          ))}
                         </div>
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex flex-wrap gap-1">
-                          {(job.nutrient_risks ?? []).map(
-                            (n: string) => (
-                              <Pill key={n} label={n} color={GOLD} />
-                            ),
-                          )}
+                          {(job.nutrient_risks ?? []).map((n: string) => (
+                            <Pill key={n} label={n} color={GOLD} />
+                          ))}
                         </div>
                       </td>
                       <td className="px-4 py-2.5">
@@ -716,7 +706,7 @@ function MaleFormFields({ form, setField }: MaleFormFieldsProps) {
 // ── MALE JOBS TAB ─────────────────────────────────────────────
 interface MJob {
   _id: string;
-  job_text: string;
+  job: string;
   common_risks: string[];
   nutrient_risks: string[];
   sperm_impact: string;
@@ -820,7 +810,7 @@ function MaleJobsTab() {
   function startEdit(j: MJob) {
     setEditId(j._id);
     setForm({
-      job: j.job_text ?? "",
+      job: j.job ?? "",
       common_risks: j.common_risks ?? [],
       nutrient_risks: j.nutrient_risks ?? [],
       sperm_impact: j.sperm_impact ?? "",
@@ -863,11 +853,8 @@ function MaleJobsTab() {
 
   const filtered = jobs.filter(
     (j) =>
-      j.job_text?.toLowerCase().includes(search.toLowerCase()) ||
-      j.common_risks
-        ?.join(" ")
-        .toLowerCase()
-        .includes(search.toLowerCase()),
+      j.job?.toLowerCase().includes(search.toLowerCase()) ||
+      j.common_risks?.join(" ").toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -885,7 +872,7 @@ function MaleJobsTab() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search male jobs…"
-            className="text-[.76rem] bg-cream border border-cream-dark rounded-[9px] px-3 py-2 outline-none w-56 font-sans focus:border-gold"
+            className="text-[.76rem] bg-cream border border-cream-dark rounded-[9px] px-3 py-2 outline-none w-56 font-sans focus:border-gold transition-colors"
           />
           <span className="text-[.7rem] text-ink-soft">
             {filtered.length} of {jobs.length}
@@ -924,136 +911,201 @@ function MaleJobsTab() {
         </div>
       )}
 
-      {loading ? (
-        <div className="text-center py-8 text-[.78rem] text-ink-soft">
-          Loading from Bubble…
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {filtered.map((job) => (
-            <div
-              key={job._id}
-              className="bg-ivory border border-cream-dark rounded-xl overflow-hidden"
-            >
-              {editId === job._id ? (
-                <div className="p-4">
-                  <MaleFormFields form={form} setField={f} />
-                  <div className="flex gap-2 mt-3">
-                    <BtnPrimary
-                      onClick={() => handleSave(job._id)}
-                      color={GREEN}
-                    >
-                      Save
-                    </BtnPrimary>
-                    <BtnGhost
-                      onClick={() => {
-                        setEditId(null);
-                        setForm(EMPTY_MJOB);
-                      }}
-                    >
-                      Cancel
-                    </BtnGhost>
-                  </div>
-                </div>
-              ) : (
-                <div className="px-4 py-3">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="font-bold text-[.85rem] text-ink">
-                      {job.job_text}
-                    </div>
-                    <div className="flex gap-1.5 flex-shrink-0">
-                      <BtnGhost onClick={() => startEdit(job)}>Edit</BtnGhost>
-                      <BtnGhost
-                        onClick={() => handleDelete(job._id, job.job_text)}
-                        danger
-                      >
-                        Delete
-                      </BtnGhost>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <div className="text-[.61rem] font-bold uppercase tracking-wide text-ink-soft mb-1">
-                        Common Risks
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {(job.common_risks ?? []).map((r: string) => (
-                          <Pill key={r} label={r} color={RUST} />
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-[.61rem] font-bold uppercase tracking-wide text-ink-soft mb-1">
-                        Nutrient Risks
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {(job.nutrient_risks ?? []).map(
-                          (n: string) => (
+      <div className="bg-ivory border border-cream-dark rounded-xl overflow-hidden">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b border-cream-dark bg-cream">
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft w-[160px]">
+                Job
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Common Risks
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Nutrient Risks
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Sperm Impact
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Hormone Impact
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Rec. Foods
+              </th>
+              <th className="text-left px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft">
+                Supplements
+              </th>
+              <th className="px-4 py-2.5 text-[.63rem] font-bold uppercase tracking-wide text-ink-soft w-[120px]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="text-center py-8 text-[.78rem] text-ink-soft"
+                >
+                  Loading from Bubble…
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="text-center py-8 text-[.78rem] text-ink-soft"
+                >
+                  {search
+                    ? "No jobs match your search"
+                    : "No male jobs in Bubble yet — click Upload to seed"}
+                </td>
+              </tr>
+            ) : (
+              filtered.map((job) => (
+                <tr
+                  key={job._id}
+                  className="border-b border-cream hover:bg-[#FDFAF6] last:border-0"
+                >
+                  {editId === job._id ? (
+                    <>
+                      <td className="px-4 py-2.5">
+                        <Input value={form.job} onChange={f("job")} />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <TagInput
+                          value={form.common_risks}
+                          onChange={f("common_risks")}
+                          color={RUST}
+                          placeholder="Add risk"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <TagInput
+                          value={form.nutrient_risks}
+                          onChange={f("nutrient_risks")}
+                          color={GOLD}
+                          placeholder="Add nutrient"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <Input
+                          value={form.sperm_impact}
+                          onChange={f("sperm_impact")}
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <Input
+                          value={form.hormone_impact}
+                          onChange={f("hormone_impact")}
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <TagInput
+                          value={form.recommended_foods}
+                          onChange={f("recommended_foods")}
+                          color={GREEN}
+                          placeholder="Add food"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <TagInput
+                          value={form.supplements}
+                          onChange={f("supplements")}
+                          color={VIOLET}
+                          placeholder="Add supplement"
+                        />
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-1.5">
+                          <BtnPrimary
+                            onClick={() => handleSave(job._id)}
+                            color={GREEN}
+                          >
+                            Save
+                          </BtnPrimary>
+                          <BtnGhost
+                            onClick={() => {
+                              setEditId(null);
+                              setForm(EMPTY_MJOB);
+                            }}
+                          >
+                            Cancel
+                          </BtnGhost>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-4 py-2.5 font-semibold text-[.79rem] text-ink">
+                        {job.job}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {(job.common_risks ?? []).map((r: string) => (
+                            <Pill key={r} label={r} color={RUST} />
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {(job.nutrient_risks ?? []).map((n: string) => (
                             <Pill key={n} label={n} color={GOLD} />
-                          ),
-                        )}
-                      </div>
-                    </div>
-                    {job.sperm_impact && (
-                      <div>
-                        <div className="text-[.61rem] font-bold uppercase tracking-wide text-[#9B7EA6] mb-1">
-                          Sperm Impact
+                          ))}
                         </div>
-                        <div className="text-[.73rem] text-ink-mid">
-                          {job.sperm_impact}
-                        </div>
-                      </div>
-                    )}
-                    {job.hormone_impact && (
-                      <div>
-                        <div className="text-[.61rem] font-bold uppercase tracking-wide text-[#C9973A] mb-1">
-                          Hormone Impact
-                        </div>
-                        <div className="text-[.73rem] text-ink-mid">
-                          {job.hormone_impact}
-                        </div>
-                      </div>
-                    )}
-                    {job.recommended_foods?.length ? (
-                      <div>
-                        <div className="text-[.61rem] font-bold uppercase tracking-wide text-[#2D6B4A] mb-1">
-                          Recommended Foods
-                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-[.73rem] text-ink-mid">
+                        {job.sperm_impact}
+                      </td>
+                      <td className="px-4 py-2.5 text-[.73rem] text-ink-mid">
+                        {job.hormone_impact}
+                      </td>
+                      <td className="px-4 py-2.5">
                         <div className="flex flex-wrap gap-1">
-                          {(job.recommended_foods ?? []).map(
-                            (f: string) => (
-                              <Pill key={f} label={f} color={GREEN} />
-                            ),
-                          )}
+                          {(job.recommended_foods ?? []).map((food: string) => (
+                            <Pill key={food} label={food} color={GREEN} />
+                          ))}
                         </div>
-                      </div>
-                    ) : null}
-                    {job.supplements?.length ? (
-                      <div>
-                        <div className="text-[.61rem] font-bold uppercase tracking-wide text-[#7B5EA6] mb-1">
-                          Supplements
-                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
                         <div className="flex flex-wrap gap-1">
-                          {(job.supplements ?? []).map(
-                            (s: string) => (
-                              <Pill key={s} label={s} color={VIOLET} />
-                            ),
-                          )}
+                          {(job.supplements ?? []).map((s: string) => (
+                            <Pill key={s} label={s} color={VIOLET} />
+                          ))}
                         </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-          {filtered.length > 60 && (
-            <div className="text-center py-2 text-[.71rem] text-ink-soft">
-              Showing 60 of {filtered.length} — search to narrow
-            </div>
-          )}
-        </div>
-      )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex gap-1.5">
+                          <BtnGhost onClick={() => startEdit(job)}>
+                            Edit
+                          </BtnGhost>
+                          <BtnGhost
+                            onClick={() =>
+                              handleDelete(job._id, job.job)
+                            }
+                            danger
+                          >
+                            Del
+                          </BtnGhost>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          loading={loading}
+          onPrev={() => setPage((p) => p - 1)}
+          onNext={() => setPage((p) => p + 1)}
+        />
+      </div>
     </div>
   );
 }
@@ -2335,13 +2387,13 @@ function MilkTab() {
 const TABS: { id: Tab; label: string; color: string; desc: string }[] = [
   {
     id: "female-jobs",
-    label: "Female Jobs (450)",
+    label: "Female Jobs (500)",
     color: GOLD,
     desc: "Job risks + nutrient deficiencies for mothers",
   },
   {
     id: "male-jobs",
-    label: "Male Jobs (144)",
+    label: "Male Jobs (500)",
     color: VIOLET,
     desc: "Fertility impact + sperm health per job",
   },

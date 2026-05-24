@@ -35,6 +35,23 @@ export interface PagedResponse<T> {
   cursor: number; // offset to use for next page
 }
 
+// ── Proxy helper ──────────────────────────────────────────────
+// PATCH and DELETE are blocked by Bubble's CORS policy when called
+// from a browser. Route them through Next.js /api/bubble instead.
+async function bubbleProxy(
+  method: "PATCH" | "DELETE",
+  path: string,
+  body?: Record<string, unknown>,
+) {
+  const token = getToken();
+  const res = await fetch("/api/bubble", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ method, path, body, token }),
+  });
+  return res.json();
+}
+
 function c(
   arr: {
     key: string;
@@ -73,12 +90,7 @@ export async function fetchUser(id: string) {
 
 // PATCH /obj/user/:id — suspend, reinstate, change status
 export async function updateUser(id: string, data: Record<string, unknown>) {
-  const res = await fetch(`${BASE}/obj/user/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy("PATCH", `/obj/user/${id}`, data);
 }
 
 // GET /obj/user count by journey_type
@@ -145,12 +157,10 @@ export async function fetchGroups(
 }
 // PATCH /obj/post/:id — approve post (clear flagged)
 export async function approvePost(postId: string) {
-  const res = await fetch(`${BASE}/obj/post/${postId}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify({ flagged: false, hidden: false }),
+  return bubbleProxy("PATCH", `/obj/post/${postId}`, {
+    flagged: false,
+    hidden: false,
   });
-  return res.json();
 }
 // POST /obj/group — create a new community group
 export async function createGroup(data: {
@@ -167,23 +177,18 @@ export async function createGroup(data: {
 }
 // DELETE /obj/group/:id — delete a group permanently
 export async function deleteGroup(id: string) {
-  const res = await fetch(`${BASE}/obj/group/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/group/${id}`);
 }
 // PATCH /obj/group/:id — update group fields
 export async function updateGroup(
   id: string,
   data: Partial<{ name: string; description: string; category: string }>,
 ) {
-  const res = await fetch(`${BASE}/obj/group/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/group/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 
 // POST /wf/broadcast_group — send a message to all group members
@@ -233,21 +238,12 @@ export async function moderatePost(
   postId: string,
   data: { hidden?: boolean; flagged?: boolean },
 ) {
-  const res = await fetch(`${BASE}/obj/post/${postId}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy("PATCH", `/obj/post/${postId}`, data);
 }
 
 // DELETE /obj/post/:id
 export async function deletePost(postId: string) {
-  const res = await fetch(`${BASE}/obj/post/${postId}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/post/${postId}`);
 }
 
 // GET /obj/movement?limit=200
@@ -319,21 +315,15 @@ export async function updateFemaleJob(
     nutrient_risks: string[];
   }>,
 ) {
-  const res = await fetch(`${BASE}/obj/femalejob/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/femalejob/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deleteFemaleJob(id: string) {
-  const res = await fetch(`${BASE}/obj/femalejob/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/femalejob/${id}`);
 }
-
 // ── Male Jobs ─────────────────────────────────────────────────
 export async function fetchMaleJobs(
   cursor = 0,
@@ -374,19 +364,14 @@ export async function updateMaleJob(
   id: string,
   data: Record<string, string | string[]>,
 ) {
-  const res = await fetch(`${BASE}/obj/malejob/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/malejob/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deleteMaleJob(id: string) {
-  const res = await fetch(`${BASE}/obj/malejob/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/malejob/${id}`);
 }
 
 // ── Pregnancy Foods ───────────────────────────────────────────
@@ -414,19 +399,14 @@ export async function updatePregnancyFood(
   id: string,
   data: Record<string, string | string[]>,
 ) {
-  const res = await fetch(`${BASE}/obj/pregnancyfood/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/pregnancyfood/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deletePregnancyFood(id: string) {
-  const res = await fetch(`${BASE}/obj/pregnancyfood/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/pregnancyfood/${id}`);
 }
 
 // ── Milk Nutrients ────────────────────────────────────────────
@@ -454,19 +434,14 @@ export async function updateMilkNutrient(
   id: string,
   data: Record<string, string>,
 ) {
-  const res = await fetch(`${BASE}/obj/milknutrient/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/milknutrient/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deleteMilkNutrient(id: string) {
-  const res = await fetch(`${BASE}/obj/milknutrient/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/milknutrient/${id}`);
 }
 
 // ── Bulk upload helpers ───────────────────────────────────────
@@ -564,19 +539,10 @@ export async function createBloodAction(action: string) {
   return res.json();
 }
 export async function updateBloodAction(id: string, action: string) {
-  const res = await fetch(`${BASE}/obj/bloodaction/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify({ action }),
-  });
-  return res.json();
+  return bubbleProxy("PATCH", `/obj/bloodaction/${id}`, { action });
 }
 export async function deleteBloodAction(id: string) {
-  const res = await fetch(`${BASE}/obj/bloodaction/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/bloodaction/${id}`);
 }
 export async function bulkUploadBloodActions(actions: string[]) {
   for (const action of actions) await createBloodAction(action);
@@ -607,19 +573,14 @@ export async function updateBloodThinningFood(
   id: string,
   data: { food?: string; effect?: string },
 ) {
-  const res = await fetch(`${BASE}/obj/bloodthinningfood/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/bloodthinningfood/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deleteBloodThinningFood(id: string) {
-  const res = await fetch(`${BASE}/obj/bloodthinningfood/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/bloodthinningfood/${id}`);
 }
 export async function bulkUploadBloodThinningFoods(foods: string[]) {
   for (const food of foods) await createBloodThinningFood({ food });
@@ -647,19 +608,14 @@ export async function updateMilkBooster(
   id: string,
   data: { food?: string; effect?: string },
 ) {
-  const res = await fetch(`${BASE}/obj/milkbooster/${id}`, {
-    method: "PATCH",
-    headers: h(),
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  return bubbleProxy(
+    "PATCH",
+    `/obj/milkbooster/${id}`,
+    data as Record<string, unknown>,
+  );
 }
 export async function deleteMilkBooster(id: string) {
-  const res = await fetch(`${BASE}/obj/milkbooster/${id}`, {
-    method: "DELETE",
-    headers: h(),
-  });
-  return res.json();
+  return bubbleProxy("DELETE", `/obj/milkbooster/${id}`);
 }
 export async function bulkUploadMilkBoosters(
   foods: { food: string; effect: string }[],
